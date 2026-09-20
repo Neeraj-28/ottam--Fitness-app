@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Ottam - Fitness app</title>
 <meta name="theme-color" content="#5C6B35">
@@ -1194,6 +1195,10 @@
   })();
 
 })();
+  const SUPABASE_URL = 'https://evixvymintzycfpeprjn.supabase.co/rest/v1/';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV2aXh2eW1pbnR6eWNmcGVwcmpuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk5MDgxMjcsImV4cCI6MjEwNTQ4NDEyN30.h3lnKVKHv7lNSSG5VfbEyG-QdQypnr2igVdOTQjbkLw';
+
+const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 </script>
 </body>
 </html>
