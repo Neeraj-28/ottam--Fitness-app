@@ -1,0 +1,1199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Ottam - Fitness app</title>
+<meta name="theme-color" content="#5C6B35">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Ottam">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" href="icon-192.png">
+<link rel="manifest" href="manifest.json">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400..700&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #F1ECE0; --surface: #FBF8F1; --surface-2: #E9E3D2;
+    --olive: #5C6B35; --olive-strong: #3E4A24; --olive-soft: #DEE3C6; --olive-wash: #EEF0E2;
+    --ink: #2B2A1F; --muted: #7B7862; --hairline: #DCD5C2; --danger: #8A4B33;
+    --radius-card: 18px; --radius-chip: 999px;
+    --font-display: "Fraunces", serif; --font-body: "Work Sans", sans-serif;
+    --safe-t: env(safe-area-inset-top, 0px); --safe-b: env(safe-area-inset-bottom, 0px);
+  }
+  :root:not([data-theme="light"]) {
+    @media (prefers-color-scheme: dark) {
+      --bg: #23241B; --surface: #2C2D22; --surface-2: #363725;
+      --olive: #9AAD5E; --olive-strong: #C7D69A; --olive-soft: #3A3E28; --olive-wash: #2F3324;
+      --ink: #F1EEE1; --muted: #A8A488; --hairline: #43442F; --danger: #C98564;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #23241B; --surface: #2C2D22; --surface-2: #363725;
+    --olive: #9AAD5E; --olive-strong: #C7D69A; --olive-soft: #3A3E28; --olive-wash: #2F3324;
+    --ink: #F1EEE1; --muted: #A8A488; --hairline: #43442F; --danger: #C98564;
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  html { scroll-padding-top: var(--safe-t); }
+  body {
+    background: var(--bg); color: var(--ink); font-family: var(--font-body);
+    -webkit-tap-highlight-color: transparent;
+    padding-top: var(--safe-t); padding-bottom: var(--safe-b);
+  }
+
+  .auth-screen { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 28px 20px; }
+  .auth-wrap { max-width: 380px; width: 100%; }
+  .auth-brand { display: flex; flex-direction: column; align-items: center; gap: 8px; margin-bottom: 22px; }
+  .auth-brand .brandname { font-family: var(--font-display); font-weight: 700; font-size: 1.4rem; }
+  .auth-brand .brandtag { font-size: 0.72rem; color: var(--muted); }
+  .auth-error { color: var(--danger); font-size: 0.78rem; min-height: 16px; margin: -4px 0 10px; line-height: 1.4; }
+  .auth-switch { text-align: center; font-size: 0.82rem; color: var(--muted); margin: 14px 0 0; }
+  .link-btn { background: none; border: none; color: var(--olive-strong); font-weight: 700; font-family: var(--font-body); font-size: 0.82rem; cursor: pointer; padding: 0; text-decoration: underline; }
+
+  .shell { max-width: 430px; margin: 0 auto; min-height: 100%; display: flex; flex-direction: column; background: var(--bg); position: relative; }
+
+  .topbar { position: sticky; top: var(--safe-t); z-index: 5; background: var(--bg); padding: 18px 20px 14px; }
+  .brandrow { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+  .brandrow .logo { flex-shrink: 0; }
+  .brandname { font-family: var(--font-display); font-weight: 700; font-size: 1.08rem; line-height: 1.1; letter-spacing: -0.01em; }
+  .brandtag { font-size: 0.66rem; color: var(--muted); letter-spacing: 0.01em; }
+  .greetrow { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+  .greetrow .greeting { font-family: var(--font-display); font-weight: 600; font-size: 1.35rem; line-height: 1.15; }
+  .greetrow .dateline { font-size: 0.76rem; color: var(--muted); white-space: nowrap; padding-top: 4px; }
+
+  main.views { flex: 1; overflow-x: hidden; overflow-wrap: anywhere; padding: 0 20px 28px; position: relative; }
+
+  .view { display: none; }
+  .view.active { display: block; animation: rise .32s ease; }
+  @keyframes rise { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+  @media (prefers-reduced-motion: reduce) { .view.active { animation: none; } }
+
+  h2.section-title { font-family: var(--font-display); font-weight: 600; font-size: 1.2rem; margin: 4px 0 12px; }
+  p.section-sub { color: var(--muted); font-size: 0.85rem; margin: -8px 0 16px; line-height: 1.5; }
+
+  .card { background: var(--surface); border: 1px solid var(--hairline); border-radius: var(--radius-card); padding: 18px; margin-bottom: 14px; }
+
+  .rings { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px; }
+  .ring-card { background: var(--surface); border: 1px solid var(--hairline); border-radius: var(--radius-card); padding: 16px 10px 14px; display: flex; flex-direction: column; align-items: center; text-align: center; }
+  .ring-card svg { width: 118px; height: 118px; }
+  .ring-track { stroke: var(--olive-soft); stroke-width: 12; fill: none; }
+  .ring-fill { stroke: var(--olive); stroke-width: 12; fill: none; stroke-linecap: round; transition: stroke-dashoffset .5s ease; }
+  .ring-wrap { position: relative; width: 118px; height: 118px; }
+  .ring-center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  .ring-center .num { font-family: var(--font-display); font-weight: 600; font-size: 1.35rem; line-height: 1; }
+  .ring-center .unit { font-size: 0.65rem; color: var(--muted); margin-top: 2px; }
+  .ring-label { margin-top: 10px; font-weight: 600; font-size: 0.85rem; }
+  .ring-target { font-size: 0.72rem; color: var(--muted); margin-top: 1px; }
+
+  .stat-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px; }
+  .stat-box { background: var(--olive-wash); border-radius: var(--radius-card); padding: 14px 16px; }
+  .stat-box .stat-num { font-family: var(--font-display); font-size: 1.3rem; font-weight: 600; }
+  .stat-box .stat-label { font-size: 0.75rem; color: var(--muted); margin-top: 2px; }
+
+  .steptrack-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .steptrack-title { font-weight: 700; font-size: 0.88rem; }
+  .steptrack-status { font-size: 0.76rem; color: var(--muted); margin-top: 2px; }
+
+  .plan-nav-card { display: flex; align-items: center; gap: 14px; cursor: pointer; }
+  .plan-nav-text { flex: 1; min-width: 0; }
+  .plan-nav-title { font-weight: 700; font-size: 0.95rem; }
+  .plan-nav-sub { font-size: 0.78rem; color: var(--muted); margin-top: 2px; }
+  .plan-nav-arrow { font-size: 1.4rem; color: var(--muted); flex-shrink: 0; }
+
+  .photo-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 12px; }
+  .photo-thumb { position: relative; aspect-ratio: 1 / 1; border-radius: 12px; overflow: hidden; background: var(--olive-wash); border: 1px solid var(--hairline); }
+  .photo-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .photo-date { position: absolute; bottom: 0; left: 0; right: 0; background: rgba(20,20,10,.55); color: #F8F6EE; font-size: 0.58rem; padding: 3px 5px; }
+  .photo-remove { position: absolute; top: 4px; right: 4px; background: rgba(20,20,10,.55); color: #F8F6EE; border: none; border-radius: 50%; width: 20px; height: 20px; font-size: 0.72rem; line-height: 1; cursor: pointer; }
+
+  .day-tabs { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; margin-bottom: 14px; scrollbar-width: none; }
+  .day-tabs::-webkit-scrollbar { display: none; }
+  .day-tab { flex: 0 0 auto; border: 1px solid var(--hairline); background: var(--surface); color: var(--ink); border-radius: var(--radius-chip); padding: 8px 16px; font-size: 0.82rem; font-weight: 600; font-family: var(--font-body); cursor: pointer; }
+  .day-tab.active { background: var(--olive); color: var(--surface); border-color: var(--olive); }
+  .week-pill { display: inline-block; background: var(--olive-wash); color: var(--olive-strong); font-size: 0.7rem; font-weight: 700; border-radius: var(--radius-chip); padding: 4px 12px; margin-bottom: 10px; }
+
+  .meal-block { margin-bottom: 16px; }
+  .meal-block-title { font-weight: 700; font-size: 0.78rem; color: var(--olive-strong); margin-bottom: 8px; }
+  .food-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--hairline); }
+  .food-row:last-of-type { border-bottom: none; }
+  .food-icon { width: 42px; height: 42px; border-radius: 50%; background: var(--olive-wash); display: flex; align-items: center; justify-content: center; font-size: 1.3rem; flex-shrink: 0; }
+  .food-name { font-weight: 600; font-size: 0.9rem; }
+  .food-macros { font-size: 0.72rem; color: var(--muted); margin-top: 2px; }
+  .meal-total { display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--muted); margin-top: 8px; padding-top: 8px; border-top: 1px dashed var(--hairline); }
+  .meal-total b { color: var(--ink); }
+  .diet-note { font-size: 0.72rem; color: var(--muted); margin-top: 4px; line-height: 1.5; }
+
+  .plan-focus-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  .exercise-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; margin-bottom: 6px; }
+  .exercise-name { font-weight: 700; font-size: 0.92rem; }
+  .body-tag { background: var(--olive-wash); color: var(--olive-strong); font-size: 0.64rem; font-weight: 700; border-radius: var(--radius-chip); padding: 4px 10px; white-space: nowrap; flex-shrink: 0; }
+  .exercise-why { font-size: 0.8rem; color: var(--muted); margin: 0 0 8px; line-height: 1.45; }
+  .exercise-detail { font-size: 0.78rem; font-weight: 700; color: var(--olive-strong); }
+
+  .fab {
+    position: fixed;
+    right: max(20px, calc((100vw - 430px) / 2 + 20px));
+    bottom: calc(90px + var(--safe-b));
+    width: 58px; height: 58px; border-radius: 50%;
+    background: var(--olive); color: var(--surface);
+    font-size: 1.9rem; line-height: 1; border: none;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 6px 16px rgba(30,30,15,0.28);
+    cursor: pointer; z-index: 15;
+  }
+  .fab:active { background: var(--olive-strong); }
+
+  .tracker-overlay { position: fixed; inset: 0; background: rgba(20,20,10,.48); display: none; align-items: flex-end; justify-content: center; z-index: 30; }
+  .tracker-sheet { background: var(--bg); width: 100%; max-width: 430px; max-height: 90vh; overflow-y: auto; border-radius: 22px 22px 0 0; padding: 16px 20px calc(20px + var(--safe-b)); }
+  .tracker-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
+  .modal-close { background: var(--olive-wash); border: none; width: 32px; height: 32px; border-radius: 50%; font-size: 1.1rem; color: var(--ink); cursor: pointer; flex-shrink: 0; }
+
+  .modal-overlay { position: fixed; inset: 0; background: rgba(20,20,10,.48); display: none; align-items: center; justify-content: center; z-index: 40; padding: 20px; }
+  .modal-card { background: var(--surface); border-radius: var(--radius-card); padding: 26px 22px; max-width: 340px; width: 100%; text-align: center; }
+  .modal-card .modal-emoji { font-size: 2.2rem; margin-bottom: 6px; }
+
+  .activity-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
+  .activity-btn { background: var(--surface); border: 2px solid var(--hairline); border-radius: var(--radius-card); padding: 16px 10px; display: flex; flex-direction: column; align-items: center; gap: 8px; cursor: pointer; font-family: var(--font-body); }
+  .activity-btn.selected { border-color: var(--olive); background: var(--olive-wash); }
+  .activity-btn:disabled { opacity: .45; cursor: not-allowed; }
+  .activity-circle { width: 56px; height: 56px; border-radius: 50%; background: var(--olive); color: var(--surface); display: flex; align-items: center; justify-content: center; font-size: 1.6rem; }
+  .activity-name { font-weight: 600; font-size: 0.82rem; color: var(--ink); }
+  .activity-met { font-size: 0.68rem; color: var(--muted); }
+
+  .session-card { text-align: center; }
+  .session-icon-big { width: 96px; height: 96px; border-radius: 50%; background: var(--olive); color: var(--surface); display: flex; align-items: center; justify-content: center; font-size: 2.6rem; margin: 0 auto 14px; }
+  .session-icon-big.running-pulse { animation: pulse 1.6s ease-in-out infinite; }
+  @keyframes pulse { 0%,100% { box-shadow: 0 0 0 0 rgba(92,107,53,.35); } 50% { box-shadow: 0 0 0 10px rgba(92,107,53,0); } }
+  @media (prefers-reduced-motion: reduce) { .session-icon-big.running-pulse { animation: none; } }
+  .timer-display { font-family: var(--font-display); font-size: 2.4rem; font-weight: 600; letter-spacing: 0.02em; }
+  .live-stats { display: flex; justify-content: center; gap: 26px; margin: 12px 0 18px; }
+  .live-stats div { text-align: center; }
+  .live-stats .n { font-weight: 700; font-size: 1.05rem; }
+  .live-stats .l { font-size: 0.68rem; color: var(--muted); }
+  .btn-primary { width: 100%; background: var(--olive); color: var(--surface); border: none; border-radius: var(--radius-chip); padding: 14px; font-family: var(--font-body); font-weight: 700; font-size: 0.95rem; cursor: pointer; }
+  .btn-primary:active { background: var(--olive-strong); }
+  .btn-stop { background: var(--danger); }
+  .btn-stop:active { filter: brightness(0.9); }
+  .btn-primary:disabled { opacity: .4; cursor: not-allowed; }
+  .btn-logout { background: var(--danger); }
+
+  .history-item { display: flex; align-items: center; gap: 12px; padding: 9px 0; border-bottom: 1px solid var(--hairline); }
+  .history-item:last-child { border-bottom: none; }
+  .history-icon { width: 34px; height: 34px; border-radius: 50%; background: var(--olive-wash); display: flex; align-items: center; justify-content: center; font-size: 1rem; }
+  .history-name { font-weight: 600; font-size: 0.85rem; }
+  .history-sub { font-size: 0.72rem; color: var(--muted); }
+  .history-cal { margin-left: auto; font-weight: 700; font-size: 0.85rem; color: var(--olive-strong); white-space: nowrap; }
+  .empty-hint { font-size: 0.8rem; color: var(--muted); padding: 6px 0; }
+
+  .field { margin-bottom: 14px; }
+  .field label { display: block; font-size: 0.78rem; font-weight: 600; color: var(--muted); margin-bottom: 6px; }
+  .field input { width: 100%; border: 1px solid var(--hairline); background: var(--surface); border-radius: 12px; padding: 11px 13px; font-family: var(--font-body); font-size: 0.92rem; color: var(--ink); }
+  .field input:focus { outline: 2px solid var(--olive); outline-offset: 1px; }
+  .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .bmi-pill { display: inline-flex; align-items: baseline; gap: 6px; background: var(--olive-wash); border-radius: var(--radius-chip); padding: 8px 16px; margin-top: 4px; }
+  .bmi-pill .n { font-family: var(--font-display); font-weight: 700; font-size: 1.1rem; }
+  .bmi-pill .t { font-size: 0.72rem; color: var(--muted); }
+  .save-toast { text-align: center; font-size: 0.78rem; color: var(--olive-strong); height: 18px; margin-top: 8px; }
+  .logged-in-as { font-size: 0.76rem; color: var(--muted); margin: -10px 0 16px; }
+
+  .bottomnav { position: sticky; bottom: 0; z-index: 10; display: flex; background: var(--surface); border-top: 1px solid var(--hairline); padding: 8px 6px calc(8px + var(--safe-b)); }
+  .nav-btn { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; background: none; border: none; color: var(--muted); font-family: var(--font-body); font-size: 0.66rem; font-weight: 600; padding: 6px 2px; cursor: pointer; }
+  .nav-btn .nav-icon { width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1rem; }
+  .nav-btn.active { color: var(--olive-strong); }
+  .nav-btn.active .nav-icon { background: var(--olive); color: var(--surface); }
+
+  ::selection { background: var(--olive-soft); }
+</style>
+</head>
+<body>
+
+<div class="auth-screen" id="authScreen">
+  <div class="auth-wrap">
+    <div class="auth-brand">
+      <svg width="52" height="52" viewBox="0 0 64 64" aria-hidden="true">
+        <circle cx="32" cy="32" r="32" fill="var(--olive)"/>
+        <circle cx="46" cy="17" r="5" fill="var(--olive-wash)" opacity="0.85"/>
+        <path d="M10 48 C10 34 15 26 15 26" stroke="var(--olive-strong)" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+        <path d="M15 26 C10 22 6 23 4 27 M15 26 C19 21 24 22 25 27 M15 26 C12 21 12 17 16 15" stroke="var(--olive-strong)" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+        <path d="M52 50 C52 37 56 30 56 30" stroke="var(--olive-strong)" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+        <path d="M56 30 C51 27 48 28 46 32 M56 30 C60 26 64 27 65 31 M56 30 C53 26 53 22 57 20" stroke="var(--olive-strong)" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+        <g transform="translate(19,15)">
+          <circle cx="13" cy="4" r="4" fill="var(--olive-wash)"/>
+          <path d="M13 9 L18 20 L13 25 L15 34" stroke="var(--olive-wash)" stroke-width="4.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M13 9 L7 21 L9 26" stroke="var(--olive-wash)" stroke-width="4.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M14 12 L21 8" stroke="var(--olive-wash)" stroke-width="4.2" fill="none" stroke-linecap="round"/>
+          <path d="M14 12 L6 10" stroke="var(--olive-wash)" stroke-width="4.2" fill="none" stroke-linecap="round"/>
+          <path d="M15 34 L22 34" stroke="var(--olive-wash)" stroke-width="4.2" fill="none" stroke-linecap="round"/>
+          <path d="M9 26 L2 28" stroke="var(--olive-wash)" stroke-width="4.2" fill="none" stroke-linecap="round"/>
+          <path d="M10 14 C13 12 16 12 18 15 L16 22 L10 21 Z" fill="var(--olive-strong)"/>
+        </g>
+      </svg>
+      <div class="brandname">Ottam</div>
+      <div class="brandtag">Fitness app</div>
+    </div>
+
+    <div class="card" id="loginCard">
+      <h2 class="section-title" style="margin-top:0">Log in</h2>
+      <div class="field">
+        <label for="loginId">Email or phone number</label>
+        <input type="text" id="loginId" autocomplete="username" placeholder="you@example.com">
+      </div>
+      <div class="field" style="margin-bottom:8px;">
+        <label for="loginPass">Password</label>
+        <input type="password" id="loginPass" autocomplete="current-password" placeholder="Your password">
+      </div>
+      <p class="auth-error" id="loginError"></p>
+      <button class="btn-primary" id="loginBtn">Log in</button>
+      <p class="auth-switch">New here? <button type="button" class="link-btn" id="toSignup">Create an account</button></p>
+    </div>
+
+    <div class="card" id="signupCard" style="display:none;">
+      <h2 class="section-title" style="margin-top:0">Create account</h2>
+      <div class="field">
+        <label for="suId">Email or phone number</label>
+        <input type="text" id="suId" autocomplete="username" placeholder="you@example.com">
+      </div>
+      <div class="field">
+        <label for="suPass">Password</label>
+        <input type="password" id="suPass" autocomplete="new-password" placeholder="At least 6 characters">
+      </div>
+      <div class="field" style="margin-bottom:8px;">
+        <label for="suConfirm">Confirm password</label>
+        <input type="password" id="suConfirm" autocomplete="new-password" placeholder="Re-enter password">
+      </div>
+      <p class="auth-error" id="signupError"></p>
+      <button class="btn-primary" id="signupBtn">Create account</button>
+      <p class="auth-switch">Already have an account? <button type="button" class="link-btn" id="toLogin">Log in</button></p>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="successOverlay">
+  <div class="modal-card">
+    <div class="modal-emoji">✅</div>
+    <h2 class="section-title" style="margin-top:0">Account created</h2>
+    <p class="section-sub" style="margin-top:-4px;">Your account is ready. Log in with your email or phone number and password to continue.</p>
+    <button class="btn-primary" id="successOkBtn">Log in now</button>
+  </div>
+</div>
+
+<div class="shell" id="shell" style="display:none;">
+
+  <header class="topbar">
+    <div class="brandrow">
+      <svg class="logo" width="42" height="42" viewBox="0 0 64 64" aria-hidden="true">
+        <circle cx="32" cy="32" r="32" fill="var(--olive)"/>
+        <circle cx="46" cy="17" r="5" fill="var(--olive-wash)" opacity="0.85"/>
+        <path d="M10 48 C10 34 15 26 15 26" stroke="var(--olive-strong)" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+        <path d="M15 26 C10 22 6 23 4 27 M15 26 C19 21 24 22 25 27 M15 26 C12 21 12 17 16 15" stroke="var(--olive-strong)" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+        <path d="M52 50 C52 37 56 30 56 30" stroke="var(--olive-strong)" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+        <path d="M56 30 C51 27 48 28 46 32 M56 30 C60 26 64 27 65 31 M56 30 C53 26 53 22 57 20" stroke="var(--olive-strong)" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+        <g transform="translate(19,15)">
+          <circle cx="13" cy="4" r="4" fill="var(--olive-wash)"/>
+          <path d="M13 9 L18 20 L13 25 L15 34" stroke="var(--olive-wash)" stroke-width="4.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M13 9 L7 21 L9 26" stroke="var(--olive-wash)" stroke-width="4.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M14 12 L21 8" stroke="var(--olive-wash)" stroke-width="4.2" fill="none" stroke-linecap="round"/>
+          <path d="M14 12 L6 10" stroke="var(--olive-wash)" stroke-width="4.2" fill="none" stroke-linecap="round"/>
+          <path d="M15 34 L22 34" stroke="var(--olive-wash)" stroke-width="4.2" fill="none" stroke-linecap="round"/>
+          <path d="M9 26 L2 28" stroke="var(--olive-wash)" stroke-width="4.2" fill="none" stroke-linecap="round"/>
+          <path d="M10 14 C13 12 16 12 18 15 L16 22 L10 21 Z" fill="var(--olive-strong)"/>
+        </g>
+      </svg>
+      <div>
+        <div class="brandname">Ottam</div>
+        <div class="brandtag">Fitness app</div>
+      </div>
+    </div>
+    <div class="greetrow">
+      <div class="greeting" id="greetingText">Hello</div>
+      <div class="dateline" id="dateText"></div>
+    </div>
+  </header>
+
+  <main class="views">
+
+    <section class="view active" id="view-dashboard">
+      <div class="rings">
+        <div class="ring-card">
+          <div class="ring-wrap">
+            <svg viewBox="0 0 118 118">
+              <circle class="ring-track" cx="59" cy="59" r="50"/>
+              <circle class="ring-fill" id="stepsRing" cx="59" cy="59" r="50" transform="rotate(-90 59 59)"/>
+            </svg>
+            <div class="ring-center"><div class="num" id="stepsNum">0</div><div class="unit">steps</div></div>
+          </div>
+          <div class="ring-label">Steps</div>
+          <div class="ring-target" id="stepsTargetLabel">of 0</div>
+        </div>
+        <div class="ring-card">
+          <div class="ring-wrap">
+            <svg viewBox="0 0 118 118">
+              <circle class="ring-track" cx="59" cy="59" r="50"/>
+              <circle class="ring-fill" id="calRing" cx="59" cy="59" r="50" transform="rotate(-90 59 59)"/>
+            </svg>
+            <div class="ring-center"><div class="num" id="calNum">0</div><div class="unit">kcal</div></div>
+          </div>
+          <div class="ring-label">Calories burned</div>
+          <div class="ring-target" id="calTargetLabel">of 0</div>
+        </div>
+      </div>
+
+      <div class="stat-row">
+        <div class="stat-box"><div class="stat-num" id="sessionsCount">0</div><div class="stat-label">Workouts today</div></div>
+        <div class="stat-box"><div class="stat-num" id="activeMinutes">0</div><div class="stat-label">Active minutes</div></div>
+      </div>
+
+      <div class="card">
+        <div class="steptrack-row">
+          <div>
+            <div class="steptrack-title">Automatic step tracking</div>
+            <div class="steptrack-status" id="stepTrackStatus">Off — works only while this app is open on screen.</div>
+          </div>
+          <button class="chip-btn" id="stepTrackToggle" style="flex-shrink:0;">Enable</button>
+        </div>
+      </div>
+
+      <div class="card plan-nav-card" id="gotoWorkoutCard" role="button" tabindex="0">
+        <div class="activity-circle">💪</div>
+        <div class="plan-nav-text">
+          <div class="plan-nav-title">Today's workout plan</div>
+          <div class="plan-nav-sub" id="dashboardPlanFocus">—</div>
+        </div>
+        <div class="plan-nav-arrow">›</div>
+      </div>
+
+      <div class="card">
+        <h2 class="section-title" style="margin-top:0">Progress photos</h2>
+        <p class="section-sub" style="margin-top:-6px">Snap your workouts and body changes over time.</p>
+        <div class="photo-grid" id="photoGrid"></div>
+        <button class="btn-primary" id="addPhotoBtn">Add a new photo</button>
+        <input type="file" accept="image/*" capture="environment" id="photoInput" style="display:none">
+      </div>
+    </section>
+
+    <section class="view" id="view-diet">
+      <h2 class="section-title">Diet plan</h2>
+      <p class="section-sub">Everyday budget-friendly meals, including simple chicken dishes for extra protein — no supplements needed.</p>
+      <div class="week-pill" id="weekPill">Week 1 plan</div>
+      <div class="day-tabs" id="dayTabs"></div>
+      <div id="mealBlocks"></div>
+      <p class="diet-note">The plan refreshes automatically every week and stays budget-friendly. Suggestions only — not a medical or dietetic prescription.</p>
+    </section>
+
+    <section class="view" id="view-workout">
+      <h2 class="section-title">Workout plan</h2>
+      <p class="section-sub">A gym-and-home workout that changes weekly and targets different body parts each day.</p>
+      <div class="week-pill" id="workoutWeekPill">Week 1 plan</div>
+      <div class="day-tabs" id="planDayTabs"></div>
+      <div class="plan-focus-row"><div class="week-pill" id="planFocusPill">Focus</div></div>
+      <p class="section-sub" id="planPartsText" style="margin-top:-6px;"></p>
+      <div id="exerciseCards"></div>
+
+      <button class="fab" id="openTrackerBtn" aria-label="Track a workout">+</button>
+    </section>
+
+    <section class="view" id="view-profile">
+      <h2 class="section-title">My profile</h2>
+      <p class="logged-in-as" id="loggedInAs"></p>
+
+      <div class="card">
+        <div class="field">
+          <label for="pName">Name</label>
+          <input type="text" id="pName" placeholder="Your name">
+        </div>
+        <div class="field-row">
+          <div class="field"><label for="pAge">Age</label><input type="number" id="pAge" min="10" max="100"></div>
+          <div class="field"><label for="pWeight">Weight (kg)</label><input type="number" id="pWeight" min="20" max="250"></div>
+        </div>
+        <div class="field"><label for="pHeight">Height (cm)</label><input type="number" id="pHeight" min="100" max="230"></div>
+        <div class="field" id="bmiField" style="display:none;">
+          <label>Body mass index</label>
+          <div class="bmi-pill"><span class="n" id="bmiNum">—</span><span class="t" id="bmiTag"></span></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="field"><label for="pStepsTarget">Daily steps target</label><input type="number" id="pStepsTarget" min="1000" step="500"></div>
+        <div class="field" style="margin-bottom:0;"><label for="pCalTarget">Daily calories-burned target</label><input type="number" id="pCalTarget" min="50" step="50"></div>
+      </div>
+
+      <button class="btn-primary" id="saveProfileBtn">Save changes</button>
+      <div class="save-toast" id="saveToast"></div>
+
+      <div class="card" style="margin-top:14px;">
+        <button class="btn-primary btn-logout" id="logoutBtn">Log out</button>
+      </div>
+    </section>
+
+  </main>
+
+  <nav class="bottomnav">
+    <button class="nav-btn active" data-view="dashboard"><span class="nav-icon">🏠</span>Dashboard</button>
+    <button class="nav-btn" data-view="diet"><span class="nav-icon">🥗</span>Diet plan</button>
+    <button class="nav-btn" data-view="workout"><span class="nav-icon">🏃</span>Workout</button>
+    <button class="nav-btn" data-view="profile"><span class="nav-icon">👤</span>Profile</button>
+  </nav>
+
+  <div class="tracker-overlay" id="trackerOverlay">
+    <div class="tracker-sheet">
+      <div class="tracker-head">
+        <h2 class="section-title" style="margin:0;">Track a workout</h2>
+        <button class="modal-close" id="closeTrackerBtn" aria-label="Close">×</button>
+      </div>
+      <p class="section-sub" id="workoutPrompt">Pick an activity to start a live session.</p>
+
+      <div class="activity-grid" id="activityGrid"></div>
+
+      <div class="card session-card" id="sessionCard" style="display:none;">
+        <div class="session-icon-big" id="sessionIcon">🚶</div>
+        <div class="timer-display" id="timerDisplay">00:00</div>
+        <div class="live-stats">
+          <div><div class="n" id="liveCalories">0</div><div class="l">kcal</div></div>
+          <div id="liveStepsWrap"><div class="n" id="liveSteps">0</div><div class="l">steps</div></div>
+        </div>
+        <button class="btn-primary" id="startStopBtn">Start</button>
+      </div>
+
+      <div class="card">
+        <h2 class="section-title" style="margin-top:0">Today's sessions</h2>
+        <div id="historyList"><p class="empty-hint">No workouts logged yet today.</p></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ================= AUTH / ACCOUNTS ================= */
+  var ACCOUNTS_KEY = "ottam_accounts_v1";
+  var SESSION_KEY = "ottam_session_v1";
+
+  function todayISO(){
+    var d = new Date();
+    return d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0") + "-" + String(d.getDate()).padStart(2,"0");
+  }
+
+  function defaultAppData(){
+    return {
+      profile: { name:"", age:28, weight:65, height:170, stepsTarget:8000, calTarget:400 },
+      today: { date: todayISO(), steps:0, calories:0, sessions:[] },
+      photos: []
+    };
+  }
+
+  var accounts = {};
+  try { accounts = JSON.parse(localStorage.getItem(ACCOUNTS_KEY)) || {}; } catch(e){ accounts = {}; }
+  function saveAccounts(){ try { localStorage.setItem(ACCOUNTS_KEY, JSON.stringify(accounts)); } catch(e){} }
+
+  var currentUser = null;
+  var state = null;
+  var pendingLoginId = "";
+
+  function save(){
+    if(!currentUser || !accounts[currentUser]) return;
+    accounts[currentUser].data = state;
+    saveAccounts();
+  }
+
+  function normalizeId(v){ return (v || "").trim().toLowerCase(); }
+  function isValidIdentifier(v){
+    var emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    var phoneRe = /^[0-9+\-\s]{7,15}$/;
+    return emailRe.test(v) || phoneRe.test(v);
+  }
+
+  async function hashPassword(pw){
+    var enc = new TextEncoder().encode(pw);
+    var buf = await crypto.subtle.digest("SHA-256", enc);
+    return Array.from(new Uint8Array(buf)).map(function(b){ return b.toString(16).padStart(2,"0"); }).join("");
+  }
+
+  function showAuthScreen(){
+    document.getElementById("shell").style.display = "none";
+    document.getElementById("authScreen").style.display = "flex";
+  }
+  function showApp(){
+    document.getElementById("authScreen").style.display = "none";
+    document.getElementById("shell").style.display = "flex";
+    startApp();
+  }
+
+  document.getElementById("toSignup").addEventListener("click", function(){
+    document.getElementById("loginCard").style.display = "none";
+    document.getElementById("signupCard").style.display = "block";
+  });
+  document.getElementById("toLogin").addEventListener("click", function(){
+    document.getElementById("signupCard").style.display = "none";
+    document.getElementById("loginCard").style.display = "block";
+  });
+
+  document.getElementById("loginBtn").addEventListener("click", async function(){
+    var id = normalizeId(document.getElementById("loginId").value);
+    var pw = document.getElementById("loginPass").value;
+    var errEl = document.getElementById("loginError");
+    errEl.textContent = "";
+    if(!id || !pw){ errEl.textContent = "Enter your email/phone number and password."; return; }
+    var acc = accounts[id];
+    if(!acc){ errEl.textContent = "No account found with that email/phone. Create one below."; return; }
+    var hash = await hashPassword(pw);
+    if(hash !== acc.passwordHash){ errEl.textContent = "Incorrect password."; return; }
+    currentUser = id;
+    try { localStorage.setItem(SESSION_KEY, id); } catch(e){}
+    state = acc.data;
+    document.getElementById("loginPass").value = "";
+    showApp();
+  });
+
+  document.getElementById("signupBtn").addEventListener("click", async function(){
+    var id = normalizeId(document.getElementById("suId").value);
+    var pw = document.getElementById("suPass").value;
+    var confirmPw = document.getElementById("suConfirm").value;
+    var errEl = document.getElementById("signupError");
+    errEl.textContent = "";
+    if(!id || !pw || !confirmPw){ errEl.textContent = "Fill in all fields."; return; }
+    if(!isValidIdentifier(id)){ errEl.textContent = "Enter a valid email address or phone number."; return; }
+    if(pw.length < 6){ errEl.textContent = "Password must be at least 6 characters."; return; }
+    if(pw !== confirmPw){ errEl.textContent = "Passwords do not match."; return; }
+    if(accounts[id]){ errEl.textContent = "An account with that email/phone already exists. Log in instead."; return; }
+    var hash = await hashPassword(pw);
+    accounts[id] = { passwordHash: hash, data: defaultAppData() };
+    saveAccounts();
+    pendingLoginId = id;
+    document.getElementById("suPass").value = "";
+    document.getElementById("suConfirm").value = "";
+    document.getElementById("suId").value = "";
+    document.getElementById("successOverlay").style.display = "flex";
+  });
+
+  document.getElementById("successOkBtn").addEventListener("click", function(){
+    document.getElementById("successOverlay").style.display = "none";
+    document.getElementById("signupCard").style.display = "none";
+    document.getElementById("loginCard").style.display = "block";
+    document.getElementById("loginId").value = pendingLoginId || "";
+    document.getElementById("loginPass").value = "";
+    document.getElementById("loginPass").focus();
+  });
+
+  document.getElementById("logoutBtn").addEventListener("click", function(){
+    if(session.active){
+      clearInterval(session.timerId);
+      session.active = false; session.key = null; session.startTime = null; session.timerId = null;
+    }
+    disableStepTracking();
+    try { localStorage.removeItem(SESSION_KEY); } catch(e){}
+    currentUser = null; state = null;
+    document.getElementById("loginId").value = "";
+    document.getElementById("loginPass").value = "";
+    document.getElementById("loginCard").style.display = "block";
+    document.getElementById("signupCard").style.display = "none";
+    document.getElementById("trackerOverlay").style.display = "none";
+    switchView("dashboard");
+    showAuthScreen();
+  });
+
+  /* ================= NAV ================= */
+  var views = ["dashboard","diet","workout","profile"];
+  function switchView(name){
+    views.forEach(function(v){ document.getElementById("view-"+v).classList.toggle("active", v===name); });
+    document.querySelectorAll(".nav-btn").forEach(function(btn){ btn.classList.toggle("active", btn.dataset.view === name); });
+  }
+  document.querySelectorAll(".nav-btn").forEach(function(btn){
+    btn.addEventListener("click", function(){ switchView(btn.dataset.view); });
+  });
+  document.getElementById("gotoWorkoutCard").addEventListener("click", function(){ switchView("workout"); });
+  document.getElementById("gotoWorkoutCard").addEventListener("keydown", function(e){
+    if(e.key === "Enter" || e.key === " "){ e.preventDefault(); switchView("workout"); }
+  });
+
+  /* ================= TRACKER MODAL ================= */
+  var trackerOverlay = document.getElementById("trackerOverlay");
+  document.getElementById("openTrackerBtn").addEventListener("click", function(){ trackerOverlay.style.display = "flex"; });
+  document.getElementById("closeTrackerBtn").addEventListener("click", function(){ trackerOverlay.style.display = "none"; });
+  trackerOverlay.addEventListener("click", function(e){ if(e.target === trackerOverlay) trackerOverlay.style.display = "none"; });
+
+  /* ================= HEADER ================= */
+  function renderHeader(){
+    var name = state.profile.name && state.profile.name.trim() ? state.profile.name.trim() : "there";
+    var hour = new Date().getHours();
+    var word = hour < 12 ? "Good morning" : (hour < 17 ? "Good afternoon" : "Good evening");
+    document.getElementById("greetingText").textContent = word + ", " + name;
+    document.getElementById("dateText").textContent = new Date().toLocaleDateString(undefined, { weekday:"short", month:"short", day:"numeric" });
+  }
+
+  /* ================= DASHBOARD ================= */
+  var RING_R = 50, RING_C = 2 * Math.PI * RING_R;
+  document.getElementById("stepsRing").style.strokeDasharray = RING_C;
+  document.getElementById("calRing").style.strokeDasharray = RING_C;
+  function setRing(el, fraction){ var f = Math.max(0, Math.min(1, fraction)); el.style.strokeDashoffset = RING_C * (1 - f); }
+
+  function renderDashboard(){
+    var t = state.today, p = state.profile;
+    document.getElementById("stepsNum").textContent = Math.round(t.steps).toLocaleString();
+    document.getElementById("stepsTargetLabel").textContent = "of " + p.stepsTarget.toLocaleString();
+    setRing(document.getElementById("stepsRing"), t.steps / Math.max(1,p.stepsTarget));
+
+    document.getElementById("calNum").textContent = Math.round(t.calories);
+    document.getElementById("calTargetLabel").textContent = "of " + p.calTarget;
+    setRing(document.getElementById("calRing"), t.calories / Math.max(1,p.calTarget));
+
+    document.getElementById("sessionsCount").textContent = t.sessions.length;
+    var mins = t.sessions.reduce(function(sum,s){ return sum + s.minutes; }, 0);
+    document.getElementById("activeMinutes").textContent = Math.round(mins);
+
+    var todayFocus = WORKOUT_DAYS[(new Date().getDay() + 6) % 7];
+    document.getElementById("dashboardPlanFocus").textContent = todayFocus.focus + " · " + todayFocus.parts;
+  }
+
+  /* ================= AUTOMATIC STEP TRACKING (device motion) ================= */
+  var stepTracking = { enabled:false, lastStepTime:0, threshold:11.5 };
+
+  function caloriesForSteps(n){ return n * (state.profile.weight || 65) * 0.0005; }
+
+  function handleMotion(e){
+    var ac = e.accelerationIncludingGravity || e.acceleration;
+    if(!ac || ac.x === null) return;
+    var mag = Math.sqrt((ac.x||0)*(ac.x||0) + (ac.y||0)*(ac.y||0) + (ac.z||0)*(ac.z||0));
+    var now = Date.now();
+    if(mag > stepTracking.threshold && (now - stepTracking.lastStepTime) > 350){
+      stepTracking.lastStepTime = now;
+      state.today.steps += 1;
+      state.today.calories += caloriesForSteps(1);
+      save();
+      renderDashboard();
+    }
+  }
+
+  function updateStepTrackUI(){
+    var status = document.getElementById("stepTrackStatus");
+    var btn = document.getElementById("stepTrackToggle");
+    if(stepTracking.enabled){
+      status.textContent = "On — counting steps while this app is open on screen.";
+      btn.textContent = "Stop";
+    } else {
+      status.textContent = "Off — works only while this app is open on screen.";
+      btn.textContent = "Enable";
+    }
+  }
+
+  function enableStepTracking(){
+    function start(){
+      window.addEventListener("devicemotion", handleMotion);
+      stepTracking.enabled = true;
+      updateStepTrackUI();
+    }
+    if(typeof DeviceMotionEvent !== "undefined" && typeof DeviceMotionEvent.requestPermission === "function"){
+      DeviceMotionEvent.requestPermission().then(function(resp){
+        if(resp === "granted"){ start(); }
+        else { alert("Motion access wasn't granted, so automatic step tracking can't run. You can still log workouts with the tracker."); }
+      }).catch(function(){ alert("Couldn't request motion access on this device."); });
+    } else if(window.DeviceMotionEvent){
+      start();
+    } else {
+      alert("This device or browser doesn't support motion sensors for automatic step tracking.");
+    }
+  }
+
+  function disableStepTracking(){
+    window.removeEventListener("devicemotion", handleMotion);
+    stepTracking.enabled = false;
+    updateStepTrackUI();
+  }
+
+  document.getElementById("stepTrackToggle").addEventListener("click", function(){
+    if(stepTracking.enabled) disableStepTracking(); else enableStepTracking();
+  });
+
+  /* ================= PROGRESS PHOTOS ================= */
+  var photoInput = document.getElementById("photoInput");
+  document.getElementById("addPhotoBtn").addEventListener("click", function(){ photoInput.click(); });
+
+  photoInput.addEventListener("change", function(e){
+    var file = e.target.files && e.target.files[0];
+    if(!file) return;
+    var reader = new FileReader();
+    reader.onload = function(ev){
+      var img = new Image();
+      img.onload = function(){
+        var maxDim = 800;
+        var scale = Math.min(1, maxDim / Math.max(img.width, img.height));
+        var canvas = document.createElement("canvas");
+        canvas.width = Math.round(img.width * scale);
+        canvas.height = Math.round(img.height * scale);
+        var ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        var dataUrl = canvas.toDataURL("image/jpeg", 0.72);
+        state.photos.unshift({ id: Date.now(), src: dataUrl, ts: new Date().toISOString() });
+        save();
+        renderPhotos();
+      };
+      img.src = ev.target.result;
+    };
+    reader.readAsDataURL(file);
+    photoInput.value = "";
+  });
+
+  function renderPhotos(){
+    var grid = document.getElementById("photoGrid");
+    if(!state.photos.length){
+      grid.innerHTML = '<p class="empty-hint" style="grid-column:1/-1;">No photos yet — add your first one below.</p>';
+      return;
+    }
+    grid.innerHTML = state.photos.map(function(p){
+      var d = new Date(p.ts);
+      var label = d.toLocaleDateString(undefined,{month:"short",day:"numeric"});
+      return '<div class="photo-thumb"><img src="' + p.src + '" alt="Progress photo from ' + label + '">' +
+        '<button class="photo-remove" data-remove-photo="' + p.id + '" aria-label="Remove photo">×</button>' +
+        '<div class="photo-date">' + label + '</div></div>';
+    }).join("");
+  }
+
+  document.getElementById("photoGrid").addEventListener("click", function(e){
+    var btn = e.target.closest("[data-remove-photo]");
+    if(!btn) return;
+    var id = Number(btn.dataset.removePhoto);
+    state.photos = state.photos.filter(function(p){ return p.id !== id; });
+    save();
+    renderPhotos();
+  });
+
+  /* ================= DIET (weekly rotating, English names, no prices) ================= */
+  var FOODS = {
+    egg:        { icon:"🥚", name:"Boiled eggs (2)",                kcal:140, c:1,  p:12, f:10 },
+    kadala:     { icon:"🫘", name:"Chickpea curry",                  kcal:180, c:28, p:9,  f:4  },
+    puttu:      { icon:"🍚", name:"Steamed rice & coconut cake",      kcal:200, c:42, p:4,  f:1  },
+    kanji:      { icon:"🍲", name:"Rice porridge",                   kcal:150, c:32, p:3,  f:1  },
+    mathi:      { icon:"🐟", name:"Sardine fry",                     kcal:160, c:0,  p:18, f:9  },
+    moru:       { icon:"🥛", name:"Spiced buttermilk",               kcal:60,  c:4,  p:4,  f:2  },
+    banana:     { icon:"🍌", name:"Ripe banana",                     kcal:110, c:28, p:1,  f:0  },
+    muthira:    { icon:"🌱", name:"Horse gram soup",                 kcal:140, c:20, p:10, f:2  },
+    idli:       { icon:"🍥", name:"Steamed rice cakes",              kcal:170, c:35, p:6,  f:1  },
+    sambar:     { icon:"🍛", name:"Lentil vegetable stew",           kcal:120, c:18, p:6,  f:3  },
+    curdrice:   { icon:"🍚", name:"Yogurt rice",                     kcal:220, c:40, p:6,  f:4  },
+    soya:       { icon:"🧆", name:"Soy chunks curry",                kcal:190, c:14, p:22, f:5  },
+    peanut:     { icon:"🥜", name:"Roasted peanuts",                 kcal:160, c:8,  p:8,  f:12 },
+    tapioca:    { icon:"🥔", name:"Boiled tapioca",                  kcal:180, c:40, p:2,  f:0  },
+    fishcurry:  { icon:"🍲", name:"Fish curry (small)",              kcal:190, c:4,  p:20, f:10 },
+    ragi:       { icon:"🌾", name:"Finger millet porridge",          kcal:140, c:26, p:5,  f:2  },
+    cherupayar: { icon:"🫛", name:"Green gram salad",                kcal:150, c:22, p:10, f:2  },
+    chapati:    { icon:"🫓", name:"Whole wheat flatbread (2)",       kcal:160, c:30, p:5,  f:3  },
+    thoran:     { icon:"🥬", name:"Vegetable & coconut stir-fry",    kcal:90,  c:10, p:3,  f:5  },
+    sweetpot:   { icon:"🍠", name:"Boiled sweet potato",             kcal:130, c:30, p:2,  f:0  },
+    rice:       { icon:"🍚", name:"Steamed rice (1 cup)",            kcal:200, c:44, p:4,  f:0  },
+    chicken:    { icon:"🍗", name:"Chicken curry (small)",           kcal:220, c:6,  p:24, f:11 },
+    chickstew:  { icon:"🍲", name:"Chicken stew",                    kcal:200, c:8,  p:20, f:9  },
+    chickroast: { icon:"🍗", name:"Dry-roasted chicken",             kcal:230, c:5,  p:22, f:13 },
+    chicksoup:  { icon:"🥣", name:"Chicken soup",                    kcal:130, c:4,  p:16, f:5  }
+  };
+
+  var WEEKS = [
+    [
+      { label:"Mon", breakfast:["puttu","egg"],   snack:["banana"],   lunch:["rice","sambar","thoran"],      dinner:["chapati","muthira"] },
+      { label:"Tue", breakfast:["idli","sambar"], snack:["peanut"],   lunch:["rice","chicken","thoran"],     dinner:["kanji","moru"] },
+      { label:"Wed", breakfast:["kanji","mathi"], snack:["sweetpot"], lunch:["rice","kadala","thoran"],      dinner:["chapati","soya"] },
+      { label:"Thu", breakfast:["puttu","kadala"],snack:["banana"],   lunch:["rice","cherupayar","thoran"],  dinner:["idli","sambar"] },
+      { label:"Fri", breakfast:["egg","ragi"],    snack:["peanut"],   lunch:["rice","fishcurry","moru"],     dinner:["chapati","chickstew"] },
+      { label:"Sat", breakfast:["idli","mathi"],  snack:["tapioca"],  lunch:["rice","soya","thoran"],        dinner:["kanji","kadala"] },
+      { label:"Sun", breakfast:["puttu","egg"],   snack:["banana"],   lunch:["curdrice","cherupayar"],       dinner:["chapati","chickroast"] }
+    ],
+    [
+      { label:"Mon", breakfast:["idli","egg"],    snack:["tapioca"],  lunch:["rice","kadala","thoran"],      dinner:["chapati","cherupayar"] },
+      { label:"Tue", breakfast:["puttu","mathi"], snack:["banana"],   lunch:["rice","chickstew","thoran"],   dinner:["kanji","muthira"] },
+      { label:"Wed", breakfast:["kanji","egg"],   snack:["peanut"],   lunch:["curdrice","soya"],             dinner:["chapati","sambar"] },
+      { label:"Thu", breakfast:["idli","kadala"], snack:["sweetpot"], lunch:["rice","fishcurry","thoran"],   dinner:["puttu","moru"] },
+      { label:"Fri", breakfast:["egg","ragi"],    snack:["banana"],   lunch:["rice","chicken","moru"],       dinner:["chapati","cherupayar"] },
+      { label:"Sat", breakfast:["puttu","mathi"], snack:["tapioca"],  lunch:["rice","kadala","thoran"],      dinner:["kanji","soya"] },
+      { label:"Sun", breakfast:["idli","egg"],    snack:["peanut"],   lunch:["rice","chickroast","thoran"],  dinner:["chapati","sambar"] }
+    ],
+    [
+      { label:"Mon", breakfast:["kanji","egg"],   snack:["banana"],   lunch:["rice","cherupayar","thoran"],  dinner:["chapati","moru"] },
+      { label:"Tue", breakfast:["puttu","egg"],   snack:["peanut"],   lunch:["rice","fishcurry","thoran"],   dinner:["idli","sambar"] },
+      { label:"Wed", breakfast:["idli","mathi"],  snack:["sweetpot"], lunch:["rice","chicken","thoran"],     dinner:["kanji","kadala"] },
+      { label:"Thu", breakfast:["egg","ragi"],    snack:["banana"],   lunch:["curdrice","soya"],             dinner:["chapati","muthira"] },
+      { label:"Fri", breakfast:["puttu","kadala"],snack:["tapioca"],  lunch:["rice","chickstew","moru"],     dinner:["kanji","sambar"] },
+      { label:"Sat", breakfast:["idli","egg"],    snack:["peanut"],   lunch:["rice","kadala","thoran"],      dinner:["chapati","cherupayar"] },
+      { label:"Sun", breakfast:["puttu","mathi"], snack:["banana"],   lunch:["rice","chickroast","thoran"],  dinner:["idli","chicksoup"] }
+    ]
+  ];
+
+  function weekIndex(){
+    var epoch = new Date(2024,0,1).getTime();
+    var diffDays = Math.floor((Date.now() - epoch) / 86400000);
+    var weekNum = Math.floor(diffDays / 7);
+    return weekNum % 3;
+  }
+  var currentWeekIdx = weekIndex();
+  var DAYS = WEEKS[currentWeekIdx];
+  var selectedDay = (new Date().getDay() + 6) % 7;
+
+  function mealTotals(ids){
+    return ids.reduce(function(acc,id){
+      var f = FOODS[id];
+      acc.kcal += f.kcal; acc.c += f.c; acc.p += f.p; acc.f += f.f;
+      return acc;
+    }, { kcal:0, c:0, p:0, f:0 });
+  }
+
+  function renderDayTabs(){
+    var wrap = document.getElementById("dayTabs");
+    wrap.innerHTML = "";
+    DAYS.forEach(function(d, i){
+      var btn = document.createElement("button");
+      btn.className = "day-tab" + (i === selectedDay ? " active" : "");
+      btn.textContent = d.label;
+      btn.addEventListener("click", function(){ selectedDay = i; renderDayTabs(); renderMeals(); });
+      wrap.appendChild(btn);
+    });
+    document.getElementById("weekPill").textContent = "Week " + (currentWeekIdx + 1) + " plan";
+  }
+
+  function mealBlockHTML(title, ids){
+    var t = mealTotals(ids);
+    var rows = ids.map(function(id){
+      var f = FOODS[id];
+      return '<div class="food-row"><div class="food-icon">' + f.icon + '</div>' +
+        '<div><div class="food-name">' + f.name + '</div>' +
+        '<div class="food-macros">C ' + f.c + 'g · P ' + f.p + 'g · F ' + f.f + 'g · ' + f.kcal + ' kcal</div></div></div>';
+    }).join("");
+    return '<div class="card meal-block"><div class="meal-block-title">' + title.toUpperCase() + '</div>' + rows +
+      '<div class="meal-total">Meal total <b>' + t.kcal + ' kcal · C' + t.c + ' P' + t.p + ' F' + t.f + 'g</b></div></div>';
+  }
+
+  function renderMeals(){
+    var d = DAYS[selectedDay];
+    document.getElementById("mealBlocks").innerHTML =
+      mealBlockHTML("Breakfast", d.breakfast) + mealBlockHTML("Lunch", d.lunch) +
+      mealBlockHTML("Evening snack", d.snack) + mealBlockHTML("Dinner", d.dinner);
+  }
+
+  /* ================= WORKOUT PLAN (weekly rotating, gym + home, body-part focus) ================= */
+  var WORKOUT_WEEKS = [
+    [
+      { label:"Mon", focus:"Upper body push", parts:"Chest · Shoulders · Triceps", exercises:[
+          { name:"Wall or knee push-ups", part:"Chest, triceps", why:"Builds pushing strength without needing any equipment.", detail:"3 sets × 12 reps" },
+          { name:"Shoulder taps (plank)", part:"Shoulders, core", why:"Strengthens shoulder stability and core together.", detail:"3 sets × 20 taps" },
+          { name:"Chair dips", part:"Triceps", why:"Uses a chair at home to isolate the triceps.", detail:"3 sets × 10 reps" } ]},
+      { label:"Tue", focus:"Lower body", parts:"Quads · Glutes · Calves", exercises:[
+          { name:"Bodyweight squats", part:"Quads, glutes", why:"The most effective no-equipment move for leg strength.", detail:"4 sets × 15 reps" },
+          { name:"Lunges", part:"Glutes, hamstrings", why:"Improves balance and single-leg strength.", detail:"3 sets × 12 reps/leg" },
+          { name:"Calf raises", part:"Calves", why:"Builds ankle stability that helps walking and running.", detail:"3 sets × 20 reps" } ]},
+      { label:"Wed", focus:"Core & light cardio", parts:"Abs · Obliques · Heart", exercises:[
+          { name:"Plank hold", part:"Core", why:"Builds the deep core strength that protects your back.", detail:"3 sets × 30 sec" },
+          { name:"Bicycle crunches", part:"Obliques", why:"Works the sides of the core that sit-ups often miss.", detail:"3 sets × 20 reps" },
+          { name:"Brisk walk or jog", part:"Cardiovascular", why:"Raises your heart rate to support stamina and fat loss.", detail:"15–20 min" } ]},
+      { label:"Thu", focus:"Full body", parts:"Legs · Chest · Core", exercises:[
+          { name:"Step-back burpees", part:"Full body", why:"One move that trains strength and cardio together.", detail:"3 sets × 8 reps" },
+          { name:"Push-ups", part:"Chest, triceps", why:"Keeps upper-body strength progressing through the week.", detail:"3 sets × 10 reps" },
+          { name:"Squat to reach", part:"Legs, shoulders", why:"Combines a squat with an overhead reach for a full-body pattern.", detail:"3 sets × 12 reps" } ]},
+      { label:"Fri", focus:"Back & arms", parts:"Back · Biceps · Forearms", exercises:[
+          { name:"Towel rows (looped on a railing)", part:"Back, biceps", why:"Mimics a cable row using things you already have at home.", detail:"3 sets × 12 reps" },
+          { name:"Superman hold", part:"Lower back", why:"Strengthens the lower back to support everyday posture.", detail:"3 sets × 20 sec" },
+          { name:"Bottle curls", part:"Biceps", why:"Any filled bottle or bag works as light resistance.", detail:"3 sets × 15 reps" } ]},
+      { label:"Sat", focus:"Cardio day", parts:"Heart · Legs · Endurance", exercises:[
+          { name:"Cycling or brisk walk", part:"Legs, cardiovascular", why:"Longer steady cardio builds endurance and burns calories.", detail:"25–30 min" },
+          { name:"Jumping jacks", part:"Full body, cardio", why:"Quick heart-rate spikes to mix in between other moves.", detail:"3 sets × 30 sec" },
+          { name:"Stair climbing", part:"Legs, glutes", why:"A free, effective way to build leg endurance if stairs are around.", detail:"10 min" } ]},
+      { label:"Sun", focus:"Rest & mobility", parts:"Full body · Flexibility", exercises:[
+          { name:"Light stretching", part:"Full body", why:"Helps muscles recover after the week's training.", detail:"10–15 min" },
+          { name:"Neck & shoulder rolls", part:"Neck, shoulders", why:"Eases tension built up from daily activity.", detail:"2 min" },
+          { name:"Slow walk", part:"Legs, light cardio", why:"Keeps blood flowing without adding fatigue before the new week.", detail:"10–15 min" } ]}
+    ],
+    [
+      { label:"Mon", focus:"Chest & triceps (gym)", parts:"Chest · Triceps · Shoulders", exercises:[
+          { name:"Bench press (or push-ups)", part:"Chest, triceps", why:"Builds pushing strength using progressive weight.", detail:"4 sets × 10 reps" },
+          { name:"Incline dumbbell press", part:"Upper chest", why:"Targets the upper chest that flat presses miss.", detail:"3 sets × 12 reps" },
+          { name:"Triceps rope pushdown", part:"Triceps", why:"Isolates the triceps once the bigger lifts are done.", detail:"3 sets × 15 reps" } ]},
+      { label:"Tue", focus:"Back & biceps (gym)", parts:"Back · Biceps · Forearms", exercises:[
+          { name:"Lat pulldown", part:"Back", why:"Builds the pulling strength that balances pressing days.", detail:"4 sets × 10 reps" },
+          { name:"Seated cable row", part:"Mid-back", why:"Improves posture by targeting the muscles between the shoulder blades.", detail:"3 sets × 12 reps" },
+          { name:"Dumbbell bicep curls", part:"Biceps", why:"Finishes the pulling muscles after the bigger back lifts.", detail:"3 sets × 15 reps" } ]},
+      { label:"Wed", focus:"Leg day (gym)", parts:"Quads · Hamstrings · Glutes", exercises:[
+          { name:"Leg press", part:"Quads, glutes", why:"Loads the legs safely with machine support.", detail:"4 sets × 12 reps" },
+          { name:"Squats (barbell or goblet)", part:"Quads, glutes, core", why:"The core gym movement for total leg strength.", detail:"3 sets × 10 reps" },
+          { name:"Lying leg curl", part:"Hamstrings", why:"Balances the quad-heavy squats and press with hamstring work.", detail:"3 sets × 15 reps" } ]},
+      { label:"Thu", focus:"Shoulders & core (gym)", parts:"Shoulders · Abs · Obliques", exercises:[
+          { name:"Seated shoulder press", part:"Shoulders", why:"Builds overhead pressing strength, distinct from chest day.", detail:"3 sets × 12 reps" },
+          { name:"Lateral raises", part:"Side shoulders", why:"Shapes the shoulders and supports joint stability.", detail:"3 sets × 15 reps" },
+          { name:"Weighted crunches", part:"Abs", why:"Adds resistance once bodyweight crunches feel easy.", detail:"3 sets × 20 reps" } ]},
+      { label:"Fri", focus:"Cardio machines", parts:"Heart · Legs · Endurance", exercises:[
+          { name:"Treadmill jog or incline walk", part:"Legs, cardio", why:"Builds aerobic base with a controlled pace and incline.", detail:"20 min" },
+          { name:"Rowing machine", part:"Back, legs, cardio", why:"A full-body cardio move that also works the back.", detail:"10 min" },
+          { name:"Stationary cycling", part:"Legs, cardio", why:"Low-impact way to add extra cardio volume.", detail:"10 min" } ]},
+      { label:"Sat", focus:"Active recovery", parts:"Full body · Mobility", exercises:[
+          { name:"Light cycling or swimming", part:"Full body", why:"Keeps blood flowing without heavy strain after a hard week.", detail:"20 min" },
+          { name:"Foam rolling or stretching", part:"Full body", why:"Eases muscle tightness from the week's gym sessions.", detail:"10 min" },
+          { name:"Easy walk", part:"Legs, light cardio", why:"Active rest that still counts toward your step goal.", detail:"15 min" } ]},
+      { label:"Sun", focus:"Rest day", parts:"Full body", exercises:[
+          { name:"Full rest or gentle stretching", part:"Full body", why:"Muscles grow during recovery, not just during training.", detail:"As needed" },
+          { name:"Hydration & sleep focus", part:"Full body", why:"Recovery is when the week's gym work actually pays off.", detail:"Ongoing" },
+          { name:"Light mobility work", part:"Joints", why:"Keeps joints loose without adding training stress.", detail:"10 min" } ]}
+    ],
+    [
+      { label:"Mon", focus:"Push day", parts:"Chest · Shoulders · Triceps", exercises:[
+          { name:"Push-ups or bench press", part:"Chest", why:"Works equally well at home or in the gym.", detail:"4 sets × 12 reps" },
+          { name:"Overhead dumbbell press", part:"Shoulders", why:"Builds pressing strength overhead.", detail:"3 sets × 12 reps" },
+          { name:"Triceps dips", part:"Triceps", why:"Uses bodyweight or a bench for triceps finishing work.", detail:"3 sets × 12 reps" } ]},
+      { label:"Tue", focus:"Pull day", parts:"Back · Biceps", exercises:[
+          { name:"Pull-ups or lat pulldown", part:"Back", why:"The most effective pulling movement, scalable to your level.", detail:"3 sets × 8 reps" },
+          { name:"Bent-over rows", part:"Back", why:"Builds thickness through the middle back.", detail:"3 sets × 12 reps" },
+          { name:"Hammer curls", part:"Biceps, forearms", why:"Targets the biceps and forearms from a different angle.", detail:"3 sets × 15 reps" } ]},
+      { label:"Wed", focus:"Leg day", parts:"Quads · Hamstrings · Glutes", exercises:[
+          { name:"Squats (bodyweight or barbell)", part:"Quads, glutes", why:"The foundation leg movement for any fitness level.", detail:"4 sets × 12 reps" },
+          { name:"Romanian deadlifts", part:"Hamstrings, glutes", why:"Strengthens the back of the legs, often neglected.", detail:"3 sets × 10 reps" },
+          { name:"Walking lunges", part:"Glutes, quads", why:"Adds a balance and single-leg strength challenge.", detail:"3 sets × 12 reps/leg" } ]},
+      { label:"Thu", focus:"Core & conditioning", parts:"Abs · Obliques · Heart", exercises:[
+          { name:"Leg raises", part:"Lower abs", why:"Targets the lower abs more directly than crunches.", detail:"3 sets × 15 reps" },
+          { name:"Russian twists", part:"Obliques", why:"Adds a rotational core challenge.", detail:"3 sets × 20 reps" },
+          { name:"Jump rope or fast walk intervals", part:"Cardio", why:"Short bursts that raise your heart rate efficiently.", detail:"10 min" } ]},
+      { label:"Fri", focus:"Full body circuit", parts:"Legs · Chest · Back · Core", exercises:[
+          { name:"Circuit: squats, push-ups, rows", part:"Full body", why:"Trains multiple muscle groups with minimal rest for efficiency.", detail:"3 rounds" },
+          { name:"Mountain climbers", part:"Core, cardio", why:"Combines core work with a cardio spike.", detail:"3 sets × 30 sec" },
+          { name:"Plank to push-up", part:"Core, chest", why:"Builds stability while still working the chest.", detail:"3 sets × 10 reps" } ]},
+      { label:"Sat", focus:"Cardio day", parts:"Heart · Legs · Endurance", exercises:[
+          { name:"Cycling or brisk walk", part:"Legs, cardiovascular", why:"Longer steady cardio builds endurance and burns calories.", detail:"25–30 min" },
+          { name:"Jumping jacks", part:"Full body, cardio", why:"Quick heart-rate spikes to mix in between other moves.", detail:"3 sets × 30 sec" },
+          { name:"Stair climbing", part:"Legs, glutes", why:"A free, effective way to build leg endurance if stairs are around.", detail:"10 min" } ]},
+      { label:"Sun", focus:"Rest & mobility", parts:"Full body · Flexibility", exercises:[
+          { name:"Light stretching", part:"Full body", why:"Helps muscles recover after the week's training.", detail:"10–15 min" },
+          { name:"Neck & shoulder rolls", part:"Neck, shoulders", why:"Eases tension built up from daily activity.", detail:"2 min" },
+          { name:"Slow walk", part:"Legs, light cardio", why:"Keeps blood flowing without adding fatigue before the new week.", detail:"10–15 min" } ]}
+    ]
+  ];
+
+  var WORKOUT_DAYS = WORKOUT_WEEKS[currentWeekIdx];
+  var selectedPlanDay = (new Date().getDay() + 6) % 7;
+
+  function renderPlanDayTabs(){
+    var wrap = document.getElementById("planDayTabs");
+    wrap.innerHTML = "";
+    WORKOUT_DAYS.forEach(function(d, i){
+      var btn = document.createElement("button");
+      btn.className = "day-tab" + (i === selectedPlanDay ? " active" : "");
+      btn.textContent = d.label;
+      btn.addEventListener("click", function(){ selectedPlanDay = i; renderPlanDayTabs(); renderPlanCards(); });
+      wrap.appendChild(btn);
+    });
+    document.getElementById("workoutWeekPill").textContent = "Week " + (currentWeekIdx + 1) + " plan";
+  }
+
+  function renderPlanCards(){
+    var d = WORKOUT_DAYS[selectedPlanDay];
+    document.getElementById("planFocusPill").textContent = d.focus;
+    document.getElementById("planPartsText").textContent = "Targets: " + d.parts;
+    document.getElementById("exerciseCards").innerHTML = d.exercises.map(function(ex){
+      return '<div class="card exercise-card"><div class="exercise-head"><div class="exercise-name">' + ex.name + '</div>' +
+        '<div class="body-tag">' + ex.part + '</div></div>' +
+        '<p class="exercise-why">' + ex.why + '</p>' +
+        '<div class="exercise-detail">' + ex.detail + '</div></div>';
+    }).join("");
+  }
+
+  /* ================= WORKOUT TRACKING ================= */
+  var ACTIVITIES = {
+    walking: { icon:"🚶", name:"Walking", met:3.5, stepsPerMin:100 },
+    running: { icon:"🏃", name:"Running", met:8,   stepsPerMin:160 },
+    gym:     { icon:"🏋️", name:"Gym / strength", met:5,   stepsPerMin:0 },
+    cycling: { icon:"🚴", name:"Cycling", met:6,   stepsPerMin:0 }
+  };
+
+  var session = { active:false, key:null, startTime:null, timerId:null };
+
+  function renderActivityGrid(){
+    var grid = document.getElementById("activityGrid");
+    grid.innerHTML = "";
+    Object.keys(ACTIVITIES).forEach(function(key){
+      var a = ACTIVITIES[key];
+      var btn = document.createElement("button");
+      btn.className = "activity-btn" + (session.key === key ? " selected" : "");
+      btn.disabled = session.active && session.key !== key;
+      btn.innerHTML = '<span class="activity-circle">' + a.icon + '</span>' +
+        '<span class="activity-name">' + a.name + '</span>' +
+        '<span class="activity-met">' + a.met + ' MET</span>';
+      btn.addEventListener("click", function(){
+        if(session.active) return;
+        session.key = key;
+        renderActivityGrid();
+        showSessionCard();
+      });
+      grid.appendChild(btn);
+    });
+  }
+
+  function showSessionCard(){
+    var card = document.getElementById("sessionCard");
+    if(!session.key){ card.style.display = "none"; return; }
+    var a = ACTIVITIES[session.key];
+    card.style.display = "block";
+    document.getElementById("sessionIcon").textContent = a.icon;
+    document.getElementById("sessionIcon").classList.toggle("running-pulse", session.active);
+    document.getElementById("liveStepsWrap").style.display = a.stepsPerMin > 0 ? "block" : "none";
+    document.getElementById("startStopBtn").textContent = session.active ? "Stop & save" : "Start";
+    document.getElementById("startStopBtn").className = "btn-primary" + (session.active ? " btn-stop" : "");
+    document.getElementById("workoutPrompt").textContent = session.active ? "Session in progress — keep going!" : "Ready when you are.";
+    if(!session.active){
+      document.getElementById("timerDisplay").textContent = "00:00";
+      document.getElementById("liveCalories").textContent = "0";
+      document.getElementById("liveSteps").textContent = "0";
+    }
+  }
+
+  function fmtTime(totalSeconds){
+    var m = Math.floor(totalSeconds / 60), s = totalSeconds % 60;
+    return String(m).padStart(2,"0") + ":" + String(s).padStart(2,"0");
+  }
+
+  function tick(){
+    var elapsed = Math.floor((Date.now() - session.startTime) / 1000);
+    var a = ACTIVITIES[session.key];
+    var hours = elapsed / 3600;
+    var calories = a.met * (state.profile.weight || 65) * hours;
+    var steps = Math.round(a.stepsPerMin * (elapsed / 60));
+    document.getElementById("timerDisplay").textContent = fmtTime(elapsed);
+    document.getElementById("liveCalories").textContent = Math.round(calories);
+    document.getElementById("liveSteps").textContent = steps;
+  }
+
+  document.getElementById("startStopBtn").addEventListener("click", function(){
+    if(!session.active){
+      session.active = true;
+      session.startTime = Date.now();
+      session.timerId = setInterval(tick, 1000);
+      renderActivityGrid();
+      showSessionCard();
+    } else {
+      clearInterval(session.timerId);
+      var elapsedSec = Math.floor((Date.now() - session.startTime) / 1000);
+      var a = ACTIVITIES[session.key];
+      var minutes = elapsedSec / 60;
+      var calories = a.met * (state.profile.weight || 65) * (elapsedSec / 3600);
+      var steps = Math.round(a.stepsPerMin * minutes);
+
+      if(elapsedSec >= 5){
+        state.today.sessions.push({
+          key: session.key, name: a.name, icon: a.icon,
+          minutes: Math.round(minutes * 10) / 10,
+          calories: Math.round(calories),
+          steps: steps,
+          time: new Date().toLocaleTimeString(undefined, { hour:"2-digit", minute:"2-digit" })
+        });
+        state.today.calories += Math.round(calories);
+        state.today.steps += steps;
+        save();
+      }
+
+      session.active = false; session.key = null; session.startTime = null; session.timerId = null;
+      renderActivityGrid();
+      showSessionCard();
+      renderDashboard();
+      renderHistory();
+    }
+  });
+
+  function renderHistory(){
+    var list = document.getElementById("historyList");
+    var sessions = state.today.sessions;
+    if(!sessions.length){ list.innerHTML = '<p class="empty-hint">No workouts logged yet today.</p>'; return; }
+    list.innerHTML = sessions.slice().reverse().map(function(s){
+      return '<div class="history-item"><div class="history-icon">' + s.icon + '</div>' +
+        '<div><div class="history-name">' + s.name + '</div>' +
+        '<div class="history-sub">' + s.time + ' · ' + s.minutes + ' min' + (s.steps ? ' · ' + s.steps + ' steps' : '') + '</div></div>' +
+        '<div class="history-cal">' + s.calories + ' kcal</div></div>';
+    }).join("");
+  }
+
+  /* ================= PROFILE ================= */
+  function fillProfileForm(){
+    var p = state.profile;
+    document.getElementById("pName").value = p.name || "";
+    document.getElementById("pAge").value = p.age;
+    document.getElementById("pWeight").value = p.weight;
+    document.getElementById("pHeight").value = p.height;
+    document.getElementById("pStepsTarget").value = p.stepsTarget;
+    document.getElementById("pCalTarget").value = p.calTarget;
+    document.getElementById("loggedInAs").textContent = "Logged in as " + currentUser;
+    renderBMI();
+  }
+
+  function renderBMI(){
+    var w = parseFloat(document.getElementById("pWeight").value);
+    var h = parseFloat(document.getElementById("pHeight").value);
+    var field = document.getElementById("bmiField");
+    if(!w || !h){ field.style.display = "none"; return; }
+    var m = h / 100;
+    var bmi = w / (m * m);
+    var tag = bmi < 18.5 ? "Underweight" : bmi < 25 ? "Healthy range" : bmi < 30 ? "Overweight" : "Higher range";
+    document.getElementById("bmiNum").textContent = bmi.toFixed(1);
+    document.getElementById("bmiTag").textContent = tag;
+    field.style.display = "block";
+  }
+  document.getElementById("pWeight").addEventListener("input", renderBMI);
+  document.getElementById("pHeight").addEventListener("input", renderBMI);
+
+  document.getElementById("saveProfileBtn").addEventListener("click", function(){
+    var p = state.profile;
+    p.name = document.getElementById("pName").value.trim();
+    p.age = parseInt(document.getElementById("pAge").value, 10) || p.age;
+    p.weight = parseFloat(document.getElementById("pWeight").value) || p.weight;
+    p.height = parseFloat(document.getElementById("pHeight").value) || p.height;
+    p.stepsTarget = parseInt(document.getElementById("pStepsTarget").value, 10) || p.stepsTarget;
+    p.calTarget = parseInt(document.getElementById("pCalTarget").value, 10) || p.calTarget;
+    save();
+    renderHeader();
+    renderDashboard();
+    var toast = document.getElementById("saveToast");
+    toast.textContent = "Saved";
+    setTimeout(function(){ toast.textContent = ""; }, 1800);
+  });
+
+  /* ================= APP STARTUP ================= */
+  function ensureFreshDay(){
+    if(state.today.date !== todayISO()){
+      state.today = { date: todayISO(), steps:0, calories:0, sessions:[] };
+      save();
+    }
+  }
+
+  function startApp(){
+    ensureFreshDay();
+    renderHeader();
+    renderPlanDayTabs();
+    renderPlanCards();
+    renderDashboard();
+    renderPhotos();
+    renderDayTabs();
+    renderMeals();
+    renderActivityGrid();
+    showSessionCard();
+    renderHistory();
+    fillProfileForm();
+    updateStepTrackUI();
+  }
+
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", function(){
+      navigator.serviceWorker.register("sw.js").catch(function(){ /* offline caching unavailable */ });
+    });
+  }
+
+  (function init(){
+    var savedUser = null;
+    try { savedUser = localStorage.getItem(SESSION_KEY); } catch(e){}
+    if(savedUser && accounts[savedUser]){
+      currentUser = savedUser;
+      state = accounts[savedUser].data;
+      showApp();
+    } else {
+      showAuthScreen();
+    }
+  })();
+
+})();
+</script>
+</body>
+</html>
